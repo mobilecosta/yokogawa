@@ -75,7 +75,6 @@ Static Function YOACD01HM(cOP)
 	Local aSize := {}
 	Local nOpt := 0
 	Local nPos := 0
-	Local nCol := 0
 	
 	// Cria um array para armazenar os dados da OP
 	aCols := {}
@@ -83,32 +82,8 @@ Static Function YOACD01HM(cOP)
 
 	// cria cabecalho de exibicao da tela de browse da OP com o titulo das colunas
 	aHeader := { fwX3Titulo("C2_OP"), fwX3Titulo("C2_ITEM"), fwX3Titulo("C2_SEQUEN"), fwX3Titulo("C2_PRODUTO"), fwX3Titulo("C2_EMISSAO"), fwX3Titulo("C2_LOCAL"), fwX3Titulo("C2_QUANT") }
-	// Tamanho de cada coluna
-	aSize := { Len(aHeader[1]), Len(aHeader[2]), Len(aHeader[3]), Len(aHeader[4]), Len(aHeader[5]), Len(aHeader[6]), Len(aHeader[7]) }
 
-	// aSize deve ser o tamanho do maior valor de cada coluna (cabecalho e dados)
-	// Comparando o tamanho do cabecalho com o tamanho do valor de cada registro de cada coluna
-	For nCol := 1 to Len(aCols)
-		For nPos := 1 to Len(aHeader)
-			cCampo := aCols[nCol][nPos]
-			If Empty(cCampo)
-				Loop
-			EndIf
-
-			// Se campo for nulo ou vazio, pula para o próximo
-			// Se campo for numérico, converte para string
-			// Se campo for data, converte para string
-			If  valtype(cCampo) == "N"
-				cCampo := cValToChar(cCampo)
-			ElseIf  valtype(cCampo) == "D"
-				cCampo := DTOC(cCampo)
-			EndIf
-
-			If aSize[nPos] < Len(cCampo)
-				aSize[nPos] := Len(cCampo)
-			EndIf
-		Next
-	Next
+	aSize := GerSize(aHeader, aCols)
 	
 	// Exibe a tela de browse da OP e recebe a posicao do item selecionado
 	VTClear()
@@ -383,51 +358,26 @@ Static Function YOACD01Pag(cOP)
 						"Ped.Compra 2"		,; //30
 						"Item Pedido 2"		 } //31	 }
 
-		// Tamanho de cada coluna
-		For nCol := 1 To Len(aHeader)
-			Aadd(aSize, Len(aHeader[nCol]))
-		Next
-
-		// aSize deve ser o tamanho do maior valor de cada coluna (cabecalho e dados)
-		// Comparando o tamanho do cabecalho com o tamanho do valor de cada registro de cada coluna
-		For nCol := 1 to Len(aCols)
-			For nPos := 1 to Len(aHeader)
-				cCampo := aCols[nCol][nPos]
-				If Empty(cCampo)
-					Loop
-				EndIf
-
-				// Se campo for nulo ou vazio, pula para o próximo
-				// Se campo for numérico, converte para string
-				// Se campo for data, converte para string
-				If  valtype(cCampo) == "N"
-					cCampo := cValToChar(cCampo)
-				ElseIf  valtype(cCampo) == "D"
-					cCampo := DTOC(cCampo)
-				EndIf
-
-				If aSize[nPos] < Len(cCampo)
-					aSize[nPos] := Len(cCampo)
-				EndIf
-			Next
-		Next
+		aSize := GerSize(aHeader, aCols)
 		
 		// Exibe a tela de browse da OP e recebe a posicao do item selecionado
-		YOACD01CAP(cOP)
-		@ 03,00 VtSay "Selecione o a opcao desejada"
-		nPos := VTaBrowse(3,0,VTMaxRow(),VTmaxCol(),aHeader,aCols, aSize)
+		While .t.
+			YOACD01CAP(cOP)
+			@ 03,00 VtSay "Selecione o a opcao desejada"
+			nPos := VTaBrowse(3,0,VTMaxRow(),VTmaxCol(),aHeader,aCols, aSize)
 
-		// Exibe menu de opções para a OP
-		aOpts := { "Zera Qtde", "Qtde Transf.", "Ok", "Cancelar" }
-		nOpt := VTaChoice(3,0,5,VTMaxCol(),aOpts)
+			// Exibe menu de opções para a OP
+			aOpts := { "Zera Qtde", "Qtde Transf.", "Ok", "Cancelar" }
+			nOpt := VTaChoice(3,0,5,VTMaxCol(),aOpts)
 
-		If nOpt == 0
-			Return
-		ElseIf nOpt == 1
-			YOPA02Zer()
-		ElseIf nOpt == 2
-			YOPA02Qtd()
-		EndIf
+			If nOpt == 0
+				Exit
+			ElseIf nOpt == 1
+				YOPA02Zer()
+			ElseIf nOpt == 2
+				YOPA02Qtd()
+			EndIf
+		EndDo
 	EndIf
 
 	_aReqOps	:= {}
@@ -1793,34 +1743,17 @@ If Len(_aSaldo) > 0
 EndIf
 
 If Len(_aLotes) > 0
+	aHeader := { "Quantidade", "Lote Origem", "Sub-Lote Origem", "Endereço Origem", "Validade", "Número de Série" }
+
+	aSize := GerSize(aHeader, _aLotes)
 	
-	DEFINE MSDIALOG _oDlg1 TITLE "Lotes Disponíveis" FROM 000,000 to 037,125
-	
-	@ 005,005 LISTBOX _oLbxLt Var _oLote FIELDS HEADER	;
-	"Quantidade"		,;
-	"Lote Origem"		,;
-	"Sub-Lote Origem"	,;
-	"Endereço Origem"	,;
-	"Validade"			,;
-	"Número de Série"	;
-	SIZE 486,255 OF _oDlg1 PIXEL
-	
-	_oLbxLt:SetArray(_aLotes)
-	_oLbxLt:bLine := {||{   _aLotes[_oLbxLt:nAt,1],;
-	_aLotes[_oLbxLt:nAt,2],;
-	_aLotes[_oLbxLt:nAt,3],;
-	_aLotes[_oLbxLt:nAt,4],;
-	_aLotes[_oLbxLt:nAt,5],;
-	_aLotes[_oLbxLt:nAt,6]}	}
-	//                    001 002 003 004 005 006
-	_oLbxLt:aColSizes := {050,050,050,050,040,050}
-	_oLote:nAt := 1
-	_oLbxLt:SetFocus()
-	
-	@ 026,103 Button oBtn4 Prompt "Ok"         Size 039,015 Action (_nSelec := _oLbxLt:nAt,_oDlg1:End())
-	@ 026,113 Button oBtn5 Prompt "Cancelar"   Size 039,015 Action Close(_oDlg1)
-	
-	ACTIVATE MSDIALOG _oDlg1 CENTERED
+	YOACD01CAP(cOP)
+	@ 03,00 VtSay "Lotes Disponiveis"
+	nPos := VTaBrowse(3,0,VTMaxRow(),VTmaxCol(),aHeader,aCols, aSize)
+
+	// Exibe menu de opções para a OP
+	aOpts := { "Ok", "Cancelar" }
+	nOpt  := VTaChoice(4,0,5,8,aOpts)
 	
 	If _nSelec > 0
 		_nTrfQtd := _aLbxIt[_oLbxIt:nAt,11]
@@ -2000,3 +1933,40 @@ EndIf
 RestArea(_aArea)
 
 Return _aVetor
+
+Static Function GerSize(aHeader, aCols)
+
+Local nCol  := 1
+Local nPos  := 1
+Local aSize := {}
+
+	// Tamanho de cada coluna
+	For nCol := 1 To Len(aHeader)
+		Aadd(aSize, Len(aHeader[nCol]))
+	Next
+
+	// aSize deve ser o tamanho do maior valor de cada coluna (cabecalho e dados)
+	// Comparando o tamanho do cabecalho com o tamanho do valor de cada registro de cada coluna
+	For nCol := 1 to Len(aCols)
+		For nPos := 1 to Len(aHeader)
+			cCampo := aCols[nCol][nPos]
+			If Empty(cCampo)
+				Loop
+			EndIf
+
+			// Se campo for nulo ou vazio, pula para o próximo
+			// Se campo for numérico, converte para string
+			// Se campo for data, converte para string
+			If  valtype(cCampo) == "N"
+				cCampo := cValToChar(cCampo)
+			ElseIf  valtype(cCampo) == "D"
+				cCampo := DTOC(cCampo)
+			EndIf
+
+			If aSize[nPos] < Len(cCampo)
+				aSize[nPos] := Len(cCampo)
+			EndIf
+		Next
+	Next
+
+Return aSize
