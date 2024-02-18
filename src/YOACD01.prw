@@ -23,7 +23,7 @@ User Function YOACD01()
 	YOACD01Cfg(nMaxLinha, nMaxColuna)
 	cOP := YOACD01GOP()
 	
-	// (HOME) Pagamento (YOACD01Pag), Visualizacao (YOACD01Vis), Impressao (YOACD01Imp) ou Sair (YOACD01Sair)
+	// (HOME) Pagamento (YOACD01Pag), Visualizacao (YOACD01Vis) ou Sair (YOACD01Sair)
 	YOACD01HM(cOP)
 
 	FWRestArea(aArea)
@@ -69,7 +69,7 @@ Return cOP
 
 // Exibe menu de opções para a OP (HOME)
 Static Function YOACD01HM(cOP)
-	Local aOpts := { "Pagamento", "Visualizacao", "Imprimir", "Sair" }
+	Local aOpts := { "Pagamento", "Visualizacao", "Sair" }
 	Local aCols := {}
 	Local aHeader := {}
 	Local aSize := {}
@@ -107,8 +107,6 @@ Static Function YOACD01HM(cOP)
 	ElseIf nOpt == 2
 		YOACD01Vis(cOP)
 	ElseIf nOpt == 3
-		YOACD01Imp(cOP)
-	ElseIf nOpt == 4
 		YOACD01Sair()
 	EndIf
 Return
@@ -743,16 +741,24 @@ Return
 
 // Visualizacao da OP
 Static Function YOACD01Vis(cOP)
+	Local _cChvSC2 := xFilial("SC2") + cOP
+	Local cExit := Space(1)
 
-	// *** AQUI VAI O CODIGO PARA VISUALIZACAO DA OP ***
+	dbSelectArea("SC2")
+	SC2->(dbSetOrder(1))
 
-Return
-
-// Impressao da OP
-Static Function YOACD01Imp(cOP)
-
-	// *** AQUI VAI O CODIGO PARA IMPRESSAO DA OP ***
-
+	dbSeek(_cChvSC2)
+	@ 00,00 VtSay "OP: " + cOP
+	@ 01,00 VtSay "Item: " + SC2->C2_ITEM
+	@ 02,00 VtSay "Sequencia: " + SC2->C2_SEQUEN
+	@ 03,00 VtSay "Produto: " + SC2->C2_PRODUTO
+	@ 04,00 VtSay "Emissao: " + DTOC(SC2->C2_EMISSAO)
+	@ 05,00 VtSay "Local: " + SC2->C2_LOCAL
+	@ 06,00 VtSay "Quantidade: " + cValToChar(SC2->C2_QUANT)
+	@ 07,00 VtSay "Sair" VtGet cExit 
+	VTRead()
+	
+	YOACD01HM(cOP)
 Return
 
 // --- Funções de Acesso a Dados --------------------------------------------
