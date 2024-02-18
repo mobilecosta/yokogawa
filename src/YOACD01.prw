@@ -117,7 +117,7 @@ Return
 
 // Pagamento da OP
 Static Function YOACD01Pag(cOP)
-	Local aCombo := {"02-Almoxarifado","03-LM 2.5","04-Inspeção","08-Projeto P&P"}	// Tabela NNR
+	Local aCombo := {"02-Almoxarifado","03-LM 2.5","04-Inspecao","08-Projeto P&P"}	// Tabela NNR
 	Local _aItAux    := {}
 	Local _lGrv      := .F.
 	Local _nCnt		 := 1
@@ -282,47 +282,6 @@ Static Function YOACD01Pag(cOP)
 
 		YOACD01CAP(cOP)
 		
-		// Cria um array para armazenar os dados da OP
-		aCols := {}
-		For nCol := 1 To Len(_aLbxIt)
-			aItem := { 	Iif(_aLbxIt[nCol,11] > 0,"ENABLE",Iif(_aLbxIt[nCol,6] > 0 .Or. _aLbxIt[nCol,5] <= 0, "AMARELO",;
-						Iif(_aLbxIt[nCol,11] <= 0 .And. _aLbxIt[nCol,6] <= 0 .And. !Empty(_aLbxIt[nCol,8]),"AZUL","DISABLE"))),;
-						_aLbxIt[nCol,1],;
-						_aLbxIt[nCol,2],;
-						_aLbxIt[nCol,3],;
-						_aLbxIt[nCol,4],;
-						_aLbxIt[nCol,5],;
-						_aLbxIt[nCol,6],;
-						_aLbxIt[nCol,11],; //Posição da coluna alterado por solicitação do Rogério - Chamado 29695
-						_aLbxIt[nCol,15],; //Posição da coluna alterado por solicitação do Rogério - Chamado 29695
-						_aLbxIt[nCol,7],;
-						_aLbxIt[nCol,8],;
-						_aLbxIt[nCol,9],;
-						_aLbxIt[nCol,10],;
-						_aLbxIt[nCol,12],;
-						_aLbxIt[nCol,13],;
-						_aLbxIt[nCol,14],;
-						_aLbxIt[nCol,16],;
-						_aLbxIt[nCol,17],;
-						_aLbxIt[nCol,18],;
-						_aLbxIt[nCol,19],;
-						_aLbxIt[nCol,20],;
-						_aLbxIt[nCol,21],;
-						_aLbxIt[nCol,22],;
-						_aLbxIt[nCol,23],;
-						_aLbxIt[nCol,24],;
-						_aLbxIt[nCol,25],;
-						_aLbxIt[nCol,26],;
-						_aLbxIt[nCol,27],;
-						_aLbxIt[nCol,28],;
-						_aLbxIt[nCol,29],;
-						_aLbxIt[nCol,30],;
-						_aLbxIt[nCol,31],;
-						_aLbxIt[nCol,11] }
-
-			aAdd(aCols, AClone(aItem))
-		Next
-
 		// cria cabecalho de exibicao da tela de browse da OP com o titulo das colunas
 		aHeader := { 	"Status",;
 						"Número da OP"		,; //01
@@ -361,20 +320,68 @@ Static Function YOACD01Pag(cOP)
 		
 		// Exibe a tela de browse da OP e recebe a posicao do item selecionado
 		While .t.
+			// Cria um array para armazenar os dados da OP
+			aCols := {}
+			For nCol := 1 To Len(_aLbxIt)
+				aItem := { 	Iif(_aLbxIt[nCol,11] > 0,"ENABLE",Iif(_aLbxIt[nCol,6] > 0 .Or. _aLbxIt[nCol,5] <= 0, "AMARELO",;
+							Iif(_aLbxIt[nCol,11] <= 0 .And. _aLbxIt[nCol,6] <= 0 .And. !Empty(_aLbxIt[nCol,8]),"AZUL","DISABLE"))),;
+							_aLbxIt[nCol,1],;
+							_aLbxIt[nCol,2],;
+							_aLbxIt[nCol,3],;
+							_aLbxIt[nCol,4],;
+							_aLbxIt[nCol,5],;
+							_aLbxIt[nCol,6],;
+							_aLbxIt[nCol,11],; //Posição da coluna alterado por solicitação do Rogério - Chamado 29695
+							_aLbxIt[nCol,15],; //Posição da coluna alterado por solicitação do Rogério - Chamado 29695
+							_aLbxIt[nCol,7],;
+							_aLbxIt[nCol,8],;
+							_aLbxIt[nCol,9],;
+							_aLbxIt[nCol,10],;
+							_aLbxIt[nCol,12],;
+							_aLbxIt[nCol,13],;
+							_aLbxIt[nCol,14],;
+							_aLbxIt[nCol,16],;
+							_aLbxIt[nCol,17],;
+							_aLbxIt[nCol,18],;
+							_aLbxIt[nCol,19],;
+							_aLbxIt[nCol,20],;
+							_aLbxIt[nCol,21],;
+							_aLbxIt[nCol,22],;
+							_aLbxIt[nCol,23],;
+							_aLbxIt[nCol,24],;
+							_aLbxIt[nCol,25],;
+							_aLbxIt[nCol,26],;
+							_aLbxIt[nCol,27],;
+							_aLbxIt[nCol,28],;
+							_aLbxIt[nCol,29],;
+							_aLbxIt[nCol,30],;
+							_aLbxIt[nCol,31],;
+							_aLbxIt[nCol,11] }
+
+				aAdd(aCols, AClone(aItem))
+			Next
+
 			YOACD01CAP(cOP)
 			@ 03,00 VtSay "Transferencias"
 			nPos := VTaBrowse(3,0,VTMaxRow(),VTmaxCol(),aHeader,aCols, aSize)
+
+			If nPos == 0
+				Exit
+			EndIf
 
 			// Exibe menu de opções para a OP
 			aOpts := { "Zera Qtde", "Qtde Transf.", "Ok", "Cancelar" }
 			nOpt := VTaChoice(3,0,5,VTMaxCol(),aOpts)
 
 			If nOpt == 1
-				YOPA02Zer()
+				YOPA02Zer(@_aLbxIt)
 			ElseIf nOpt == 2
-				YOPA02Qtd(cOp, nPos)
+				YOPA02Qtd(cOp, @_aLbxIt, aCols, nPos)
 			ElseIf nOpt == 3
 				_lGrv := .T.
+				Exit
+			Else
+				Exit
 			EndIf
 		EndDo
 	EndIf
@@ -392,11 +399,11 @@ Static Function YOACD01Pag(cOP)
 			aItemLog := {}
 			DBSelectArea("SD4")
 			DBSetOrder(2)
-			If DBSeek(xFilial("SD4")+cMV_PAR01)
-				While !SD4->(Eof()) .AND. alltrim(SD4->D4_OP) == alltrim(cMV_PAR01)
+			If DBSeek(xFilial("SD4")+cOP)
+				While !SD4->(Eof()) .AND. alltrim(SD4->D4_OP) == alltrim(cOP)
 					aDadLog := {}
 					aadd(aDadLog,{"ZF_FILIAL",xFilial("SZF"),Nil})
-					aadd(aDadLog,{"ZF_OP",cMV_PAR01,Nil})
+					aadd(aDadLog,{"ZF_OP",cOP,Nil})
 					aadd(aDadLog,{"ZF_EMISSAO",dDataBase,Nil})
 					aadd(aDadLog,{"ZF_HORA",Time(),Nil})
 					aadd(aDadLog,{"ZF_USUARIO",Substr(cUsuario,7,15),Nil})
@@ -416,7 +423,7 @@ Static Function YOACD01Pag(cOP)
 		Endif
 		
 		aItemLog := {}
-		aAdd(_aItens,{Substr(cMV_PAR01,1,8),dDataBase})
+		aAdd(_aItens,{Substr(cOP,1,8),dDataBase})
 		aItMata381 := {}
 		aCbMata381 := {}
 		For _nCont2 := 1 to Len(_aLbxIt)
@@ -466,7 +473,6 @@ Static Function YOACD01Pag(cOP)
 				
 				// Atualiza Arquivos de Empenho
 				If Len(_aItAux) > 0
-					//aAdd(_aItens,{Substr(cMV_PAR01,1,8),dDataBase}) //Comentado para ajustar o EmpMod3
 					For _nCnt5 := 1 to Len(_aItAux)
 						If Len(_aItAuxTrf) > 0
 							_nChkTran := aScan(_aItAuxTrf,{|x| x[1]+x[4]+x[5]+x[12] == _aItAux[_nCnt5][01]+_aItAux[_nCnt5][04]+_aItAux[_nCnt5][05]+_aItAux[_nCnt5][12] })
@@ -483,12 +489,12 @@ Static Function YOACD01Pag(cOP)
 							//Gravação do Log Para Validação
 							aDadLog := {}
 							aadd(aDadLog,{"ZF_FILIAL",xFilial("SZF"),Nil})
-							aadd(aDadLog,{"ZF_OP",cMV_PAR01,Nil})
+							aadd(aDadLog,{"ZF_OP",cOP,Nil})
 							aadd(aDadLog,{"ZF_EMISSAO",dDataBase,Nil})
 							aadd(aDadLog,{"ZF_HORA",Time(),Nil})
 							aadd(aDadLog,{"ZF_USUARIO",Substr(cUsuario,7,15),Nil})
 							aadd(aDadLog,{"ZF_TIPO","T",Nil})
-							aadd(aDadLog,{"ZF_DOC",Substr(cMV_PAR01,1,8),Nil})
+							aadd(aDadLog,{"ZF_DOC",Substr(cOP,1,8),Nil})
 							aadd(aDadLog,{"ZF_COD",_aItAux[_nCnt5][01],Nil})		// 01 - Produto Origem
 							aadd(aDadLog,{"ZF_UM",_aItAux[_nCnt5][03],Nil})     	// 03 - UM Origem
 							aadd(aDadLog,{"ZF_QUANTOR",_aItAux[_nCnt5][16],Nil})	// 16 - Quantidade
@@ -571,8 +577,7 @@ Static Function YOACD01Pag(cOP)
 			Endif
 			If Len(aItMata381) > 0 .And. lContinua
 				lMsErroAuto := .F.
-				aCbMata381 := {{"D4_OP",PadR(cMV_PAR01,TamSx3("D4_OP")[1]),NIL},;
-							{"INDEX",2,Nil}}
+				aCbMata381 := {{"D4_OP",PadR(cOp,TamSx3("D4_OP")[1]),NIL}, {"INDEX",2,Nil}}
 				MSExecAuto({|x,y,z| mata381(x,y,z)},aCbMata381,aItMata381,4)
 				If lMsErroAuto
 					//Se ocorrer erro.
@@ -590,11 +595,11 @@ Static Function YOACD01Pag(cOP)
 			aItemLog := {}
 			DBSelectArea("SD4")
 			DBSetOrder(2)
-			if DBSeek(xFilial("SD4")+cMV_PAR01)
-				While !SD4->(Eof()) .AND. alltrim(SD4->D4_OP) == alltrim(cMV_PAR01)
+			if DBSeek(xFilial("SD4")+cOP)
+				While !SD4->(Eof()) .AND. alltrim(SD4->D4_OP) == alltrim(cOP)
 					aDadLog := {}
 					aadd(aDadLog,{"ZF_FILIAL",xFilial("SZF"),Nil})
-					aadd(aDadLog,{"ZF_OP",cMV_PAR01,Nil})
+					aadd(aDadLog,{"ZF_OP",cOP,Nil})
 					aadd(aDadLog,{"ZF_EMISSAO",dDataBase,Nil})
 					aadd(aDadLog,{"ZF_HORA",Time(),Nil})
 					aadd(aDadLog,{"ZF_USUARIO",Substr(cUsuario,7,15),Nil})
@@ -612,9 +617,6 @@ Static Function YOACD01Pag(cOP)
 				u_YOLOGOP1(aItemLog,.T.,"")
 			endif
 		endif
-		
-		MsAguarde( {||YOPA02Trb()}, "Carregando Dados...")
-		
 	Else
 		MsgAlert("Processo cancelado ou não há itens para transferência!!!")
 	EndIf
@@ -632,15 +634,6 @@ Static Function YOACD01Pag(cOP)
 	Ferase(_cArqSLDD)
 	Ferase(_cArqSLDO)
 
-	/* Opções/telas a organizar
-	1) zerar OPT
-	2) qtde a transferir OPT -> TELA (POPUP)
-	3) legenda -> TELA (POPUP) (DIRETO) 
-		-> DADOS: (Situação da OP - transf (verde), saldo suficiente (amarelo), saldo insuficiente (azul), Sem saldo (vermelho)) 
-	4) lOTES DISPONIVEIS -> TELA (POPUP) (DIRETO) 
-		-> DADOS: (QTD, LOTE ORIGEM, SUB-LOTE ORIGEM, eNDERECO ORIGEM, VALIDADE, N SERIE)
-	*/
-
 Return
 
 /*
@@ -657,18 +650,18 @@ Return
 ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
 */
 
-Static Function YOPA02Zer()
+Static Function YOPA02Zer(_aLbxIt)
 Local nI := 1
 
-if MsgYesNo(OemToAnsi("Deseja zerar a quantidade de transferencia de todos os produtos?"))
-	For nI := 1 to Len(aCols)
-		aCols[nI,11] := 0
+if MsgYesNo("Deseja zerar a quantidade de transferencia de todos os produtos?")
+	For nI := 1 to Len(_aLbxIt)
+		_aLbxIt[nI,11] := 0
 	Next
 endif
 
 Return
 
-Static Function YOPA02Qtd(cOp, aCols, nPos)
+Static Function YOPA02Qtd(cOp, _aLbxIt, aCols, nPos)
 
 Local nOpc  := 0
 Local aOpts := { "Ok", "Cancelar" }
@@ -676,7 +669,7 @@ Local aOpts := { "Ok", "Cancelar" }
 YOACD01CAP(cOP)
 
 nQtdSug := aCols[nPos,Len(aCols[nPos])]
-nQtdNov := aCols[nPos,11]
+nQtdNov := _aLbxIt[nPos,11]
 
 @ 02,00 VtSay "Quantidade a Transferir"
 @ 03,00 VTSAY "Qtde Sugerida"
@@ -684,12 +677,13 @@ nQtdNov := aCols[nPos,11]
 @ 04,00 VTSAY "Nova Quantidade"
 @ 04,15 VtGet nQtdNov PICTURE "@E 999999.99";
 		Valid iif((nQtdNov>=0 .AND. nQtdNov<=nQtdSug),.T.,(Alert("A nova quantidade nao pode ser maior que a quantidade original"),.F.))
+VtRead
 
 // Exibe menu de opções para a OP
-nOpt := VTaChoice(3,0,5,VTMaxCol(),aOpts)
+nOpt := VTaChoice(5,0,6,10,aOpts)
 
 If nOpt == 1
-	aCols[nOpc,11] := nQtdNov
+	_aLbxIt[nOpc,11] := nQtdNov
 EndIf
 
 Return
