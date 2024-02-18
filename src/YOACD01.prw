@@ -663,7 +663,7 @@ Return
 
 Static Function YOPA02Qtd(cOp, _aLbxIt, aCols, nPos)
 
-Local nOpc  := 0
+Local nOpt  := 0
 Local aOpts := { "Ok", "Cancelar" }
 
 YOACD01CAP(cOP)
@@ -683,7 +683,7 @@ VtRead
 nOpt := VTaChoice(5,0,6,10,aOpts)
 
 If nOpt == 1
-	_aLbxIt[nOpc,11] := nQtdNov
+	_aLbxIt[nPos,11] := nQtdNov
 EndIf
 
 Return
