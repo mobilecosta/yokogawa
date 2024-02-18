@@ -88,20 +88,20 @@ Static Function YOACD01HM(cOP)
 
 	// aSize deve ser o tamanho do maior valor de cada coluna (cabecalho e dados)
 	// Comparando o tamanho do cabecalho com o tamanho do valor de cada registro de cada coluna
-	For nCol := 1 to Len(aCols) - 1
+	For nCol := 1 to Len(aCols)
 		For nPos := 1 to Len(aHeader)
 			cCampo := aCols[nCol][nPos]
+			If Empty(cCampo)
+				Loop
+			EndIf
 
 			// Se campo for nulo ou vazio, pula para o próximo
 			// Se campo for numérico, converte para string
 			// Se campo for data, converte para string
-			If Empty(nField)
-				Continue
-			ElseIf  valtype(nField) == "N"
-				cCampo := cValToChar(nField)
-			ElseIf  valtype(nField) == "D"
-				cCampo := DTOC(nField)
-
+			If  valtype(cCampo) == "N"
+				cCampo := cValToChar(cCampo)
+			ElseIf  valtype(cCampo) == "D"
+				cCampo := DTOC(cCampo)
 			EndIf
 
 			If aSize[nPos] < Len(cCampo)
@@ -111,8 +111,9 @@ Static Function YOACD01HM(cOP)
 	Next
 	
 	// Exibe a tela de browse da OP e recebe a posicao do item selecionado
+	VTClear()
 	YOACD01CAP(cOP)
-	@ 03,00 VtSay "Selecione o a opcao desejada"
+	@ 02,00 VtSay "Selecione o a opcao"
 	nPos := VTaBrowse(3,0,VTMaxRow(),VTmaxCol(),aHeader,aCols, aSize)
 
 	If nPos == 0
@@ -159,6 +160,9 @@ Static Function YOACD01Pag(cOP)
 	Local _aArea 	 := GetArea()
 	Local nPos       := 1
 	Local nCol       := 1
+	Local aCols 	 := {}
+	Local aHeader 	 := {}
+	Local aSize 	 := {}
 
 	Private _aSelec  := {}
 	Private _aCampos := {}
@@ -248,6 +252,12 @@ Static Function YOACD01Pag(cOP)
 	aAdd(_aCampo2,{'YPEDBE2' ,'C',006,000})
 	aAdd(_aCampo2,{'YPEDCO2' ,'C',006,000})
 	aAdd(_aCampo2,{'YPEDIT2' ,'C',004,000})
+	//Cria Arquivo de Transferência
+	_cArqTRF := CriaTrab(_aCampo2,.T.)
+	_cIndTRF := CriaTrab(Nil,.F.)
+	dbUseArea(.T.,,_cArqTRF,"TRF",.F.,.F.)
+	//IndRegua("TRF",_cIndTRF,"NUMOP + PRODUTO + DESCEND(Transform(QTDEMP,'@E 999,999.99')) + LOCDES + LOTDES + SBLDES + ENDDES + LOCORI + LOTORI + SBLORI + ENDORI",,,"Criando Índice Temporário...")
+	IndRegua("TRF",_cIndTRF,"NUMOP + PRODUTO + LOCDES + LOTDES + SBLDES + ENDDES + LOCORI + LOTORI + SBLORI + ENDORI",,,"Criando Índice Temporário...")
 
 	YOPA02NOP(cOP)
 
@@ -273,7 +283,6 @@ Static Function YOACD01Pag(cOP)
 		TRF->(dbCloseArea())
 	EndIf
 
-	dbSelectArea("TRB")
 	If Len(_aSelec) > 0
 		_aLbxIt := {}
 		For _nCnt := 1 to Len(_aSelec)
@@ -283,6 +292,7 @@ Static Function YOACD01Pag(cOP)
 			If Empty(SD4->D4_PAGOP)
 				//Carregar apenas com Saldo
 				If _aSelec[_nCnt][11] > 0 .Or. _aSelec[_nCnt][06] > 0 .Or. !Empty(_aSelec[_nCnt][08])
+					// aAdd(_aEstru, {SD4->D4_COD,SD4->D4_LOCAL,"","",SD4->D4_LOTECTL,SD4->D4_NUMLOTE,SD4->D4_DTVALID,SD4->D4_QUANT,_cNumOP,"SD4",SD4->(Recno()),SD4->D4_TRT,SD4->D4_YFORNEC,SD4->D4_YLOJA,SD4->D4_YPEDBEN,SD4->D4_YPEDCOM,SD4->D4_YPEDITE,SD4->D4_NUMSC,SD4->D4_YFORNE2,SD4->D4_YLOJA2,SD4->D4_YPEDBE2,SD4->D4_YPEDCO2,SD4->D4_YPEDIT2})
 					aAdd(_aLbxIt,_aSelec[_nCnt])
 				Endif
 			Endif
@@ -301,28 +311,99 @@ Static Function YOACD01Pag(cOP)
 
 		// Cria um array para armazenar os dados da OP
 		aCols := {}
-		aAdd(aCols, { SC2->C2_NUM, SC2->C2_ITEM, SC2->C2_SEQUEN, SC2->C2_PRODUTO, SC2->C2_EMISSAO, SC2->C2_LOCAL, SC2->C2_QUANT })
+		For nCol := 1 To Len(_aLbxIt)
+			aItem := { 	Iif(_aLbxIt[nCol,11] > 0,"ENABLE",Iif(_aLbxIt[nCol,6] > 0 .Or. _aLbxIt[nCol,5] <= 0, "AMARELO",;
+						Iif(_aLbxIt[nCol,11] <= 0 .And. _aLbxIt[nCol,6] <= 0 .And. !Empty(_aLbxIt[nCol,8]),"AZUL","DISABLE"))),;
+						_aLbxIt[nCol,1],;
+						_aLbxIt[nCol,2],;
+						_aLbxIt[nCol,3],;
+						_aLbxIt[nCol,4],;
+						_aLbxIt[nCol,5],;
+						_aLbxIt[nCol,6],;
+						_aLbxIt[nCol,11],; //Posição da coluna alterado por solicitação do Rogério - Chamado 29695
+						_aLbxIt[nCol,15],; //Posição da coluna alterado por solicitação do Rogério - Chamado 29695
+						_aLbxIt[nCol,7],;
+						_aLbxIt[nCol,8],;
+						_aLbxIt[nCol,9],;
+						_aLbxIt[nCol,10],;
+						_aLbxIt[nCol,12],;
+						_aLbxIt[nCol,13],;
+						_aLbxIt[nCol,14],;
+						_aLbxIt[nCol,16],;
+						_aLbxIt[nCol,17],;
+						_aLbxIt[nCol,18],;
+						_aLbxIt[nCol,19],;
+						_aLbxIt[nCol,20],;
+						_aLbxIt[nCol,21],;
+						_aLbxIt[nCol,22],;
+						_aLbxIt[nCol,23],;
+						_aLbxIt[nCol,24],;
+						_aLbxIt[nCol,25],;
+						_aLbxIt[nCol,26],;
+						_aLbxIt[nCol,27],;
+						_aLbxIt[nCol,28],;
+						_aLbxIt[nCol,29],;
+						_aLbxIt[nCol,30],;
+						_aLbxIt[nCol,31] }
+
+			aAdd(aCols, AClone(aItem))
+		Next
 
 		// cria cabecalho de exibicao da tela de browse da OP com o titulo das colunas
-		aHeader := { fwX3Titulo("C2_OP"), fwX3Titulo("C2_ITEM"), fwX3Titulo("C2_SEQUEN"), fwX3Titulo("C2_PRODUTO"), fwX3Titulo("C2_EMISSAO"), fwX3Titulo("C2_LOCAL"), fwX3Titulo("C2_QUANT") }
+		aHeader := { 	"Status",;
+						"Número da OP"		,; //01
+						"Produto"			,; //02
+						"Descrição"			,; //03
+						"U.M."				,; //04
+						"Qt. Empenhada"		,; //05
+						"Saldo"				,; //06
+						"Qt. a Transferir"	,; //11  Posição da coluna alterado por solicitação do Rogério - Chamado 29695
+						"Endereço Origem"	,; //15  Posição da coluna alterado por solicitação do Rogério - Chamado 29695
+						"Local Empenho"		,; //07
+						"Lote Empenho"		,; //08
+						"Sub-Lote Empenho"	,; //09
+						"Endereço Empenho"	,; //10
+						"Local Origem"		,; //12
+						"Lote Origem"		,; //13
+						"Sub-Lote Origem"	,; //14
+						"Validade"			,; //16
+						"Número de Série"	,; //17
+						"Tabela"			,; //18
+						"Registro"			,; //19
+						"TRT"				,; //20
+						"Fornecedor"		,; //21
+						"Loja"				,; //22
+						"Ped.Benef"			,; //23
+						"Ped.Compra"		,; //24
+						"Item Pedido"		,; //25
+						"Num S.C."			,; //26
+						"Fornecedor 2"		,; //27
+						"Loja 2"			,; //28
+						"Ped.Benef 2"		,; //29
+						"Ped.Compra 2"		,; //30
+						"Item Pedido 2"		 } //31	 }
+
 		// Tamanho de cada coluna
-		aSize := { Len(aHeader[1]), Len(aHeader[2]), Len(aHeader[3]), Len(aHeader[4]), Len(aHeader[5]), Len(aHeader[6]), Len(aHeader[7]) }
+		For nCol := 1 To Len(aHeader)
+			Aadd(aSize, Len(aHeader[nCol]))
+		Next
 
 		// aSize deve ser o tamanho do maior valor de cada coluna (cabecalho e dados)
 		// Comparando o tamanho do cabecalho com o tamanho do valor de cada registro de cada coluna
-		For nCol := 1 to Len(aCols) - 1
+		For nCol := 1 to Len(aCols)
 			For nPos := 1 to Len(aHeader)
 				cCampo := aCols[nCol][nPos]
+				If Empty(cCampo)
+					Loop
+				EndIf
 
 				// Se campo for nulo ou vazio, pula para o próximo
 				// Se campo for numérico, converte para string
 				// Se campo for data, converte para string
-				If Empty(nField)
-					Continue
-				ElseIf  valtype(nField) == "N"
-					cCampo := cValToChar(nField)
-				ElseIf  valtype(nField) == "D"
-					cCampo := DTOC(nField)
+				If  valtype(cCampo) == "N"
+					cCampo := cValToChar(cCampo)
+				ElseIf  valtype(cCampo) == "D"
+					cCampo := DTOC(cCampo)
 				EndIf
 
 				If aSize[nPos] < Len(cCampo)
