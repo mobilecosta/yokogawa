@@ -1,0 +1,34 @@
+{
+	"version": "0.2.0",
+	"configurations": [
+		{
+			"type": "totvs_language_debug",
+			"request": "launch",
+			"name": "Protheus",
+			"program": "${command:AskForProgramName}",
+			"cwb": "${workspaceFolder}",
+			"smartclientBin": "C://Protheus//v2210//Protheus//bin//smartclient//smartclient.exe",
+			"isMultiSession": true,
+			"enableTableSync": true
+		}
+	],
+	"lastPrograms": [
+		{
+			"label": "U_TIDEV"
+		},
+		{
+			"label": "SIGACOM"
+		},
+		{
+			"label": "SIGAFAT"
+		},
+		{
+			"label": "SIGAADV"
+		},
+		{
+			"label": "VTDEBUG"
+		}
+	],
+	"lastProgramExecuted": "VTDEBUG",
+	"lastProgramArguments": []
+}

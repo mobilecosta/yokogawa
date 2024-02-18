@@ -282,8 +282,6 @@ Static Function YOACD01Pag(cOP)
 
 		YOACD01CAP(cOP)
 		
-		_cTitulo := "Transferências"
-
 		// Cria um array para armazenar os dados da OP
 		aCols := {}
 		For nCol := 1 To Len(_aLbxIt)
@@ -319,7 +317,8 @@ Static Function YOACD01Pag(cOP)
 						_aLbxIt[nCol,28],;
 						_aLbxIt[nCol,29],;
 						_aLbxIt[nCol,30],;
-						_aLbxIt[nCol,31] }
+						_aLbxIt[nCol,31],;
+						_aLbxIt[nCol,11] }
 
 			aAdd(aCols, AClone(aItem))
 		Next
@@ -363,19 +362,19 @@ Static Function YOACD01Pag(cOP)
 		// Exibe a tela de browse da OP e recebe a posicao do item selecionado
 		While .t.
 			YOACD01CAP(cOP)
-			@ 03,00 VtSay "Selecione o a opcao desejada"
+			@ 03,00 VtSay "Transferencias"
 			nPos := VTaBrowse(3,0,VTMaxRow(),VTmaxCol(),aHeader,aCols, aSize)
 
 			// Exibe menu de opções para a OP
 			aOpts := { "Zera Qtde", "Qtde Transf.", "Ok", "Cancelar" }
 			nOpt := VTaChoice(3,0,5,VTMaxCol(),aOpts)
 
-			If nOpt == 0
-				Exit
-			ElseIf nOpt == 1
+			If nOpt == 1
 				YOPA02Zer()
 			ElseIf nOpt == 2
-				YOPA02Qtd()
+				YOPA02Qtd(cOp, nPos)
+			ElseIf nOpt == 3
+				_lGrv := .T.
 			EndIf
 		EndDo
 	EndIf
@@ -662,12 +661,36 @@ Static Function YOPA02Zer()
 Local nI := 1
 
 if MsgYesNo(OemToAnsi("Deseja zerar a quantidade de transferencia de todos os produtos?"))
-
-	For nI := 1 to Len(_aLbxIt)
-		_aLbxIt[nI,11] := 0
+	For nI := 1 to Len(aCols)
+		aCols[nI,11] := 0
 	Next
-
 endif
+
+Return
+
+Static Function YOPA02Qtd(cOp, aCols, nPos)
+
+Local nOpc  := 0
+Local aOpts := { "Ok", "Cancelar" }
+
+YOACD01CAP(cOP)
+
+nQtdSug := aCols[nPos,Len(aCols[nPos])]
+nQtdNov := aCols[nPos,11]
+
+@ 02,00 VtSay "Quantidade a Transferir"
+@ 03,00 VTSAY "Qtde Sugerida"
+@ 03,15 VTGET nQtdSug PICTURE "@E 999999.99" When .F.
+@ 04,00 VTSAY "Nova Quantidade"
+@ 04,15 VtGet nQtdNov PICTURE "@E 999999.99";
+		Valid iif((nQtdNov>=0 .AND. nQtdNov<=nQtdSug),.T.,(Alert("A nova quantidade nao pode ser maior que a quantidade original"),.F.))
+
+// Exibe menu de opções para a OP
+nOpt := VTaChoice(3,0,5,VTMaxCol(),aOpts)
+
+If nOpt == 1
+	aCols[nOpc,11] := nQtdNov
+EndIf
 
 Return
 
