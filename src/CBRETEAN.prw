@@ -1,21 +1,20 @@
-
 #Include "TOTVS.CH"
  
 
 User Function CBRETEAN()
-    Local cId   := Padr(PARAMIXB[1], TAMSX3("B1_CODBAR")[1])  // CÓD. PRODUTO
+    Local cId   := Padr(PARAMIXB[1], TAMSX3("B1_COD")[1])  // Cï¿½D. PRODUTO
     Local aRet  := {}                                              // DADOS DA ETIQUETA
     Local aAreaSB1 := {}                                      // ESTADO DOS ARQUIVOS DE TRABALHO
     Local aAreaSB8 := {}                                      //  
-    Local cPrd  := ''                                              // CÓDIGO DO PRODUTO (B1_COD)
+    Local cPrd  := ''                                              // Cï¿½DIGO DO PRODUTO (B1_COD)
     Local nQE   := 1
  
-    // ARMAZENA A ÁREA CORRENTE
+    // ARMAZENA A ï¿½REA CORRENTE
     aAreaSb1:= SB1->(GetArea())
     aAreaSB8:= SB8->(GetArea())
  
     dbselectarea('SB1')
-    dbsetorder(5) // B1_FILIAL+B1_CODBAR
+    dbsetorder(1) // B1_FILIAL+B1_COD
     dbseek(xFilial("SB1")+cId)
     AAdd(aRet, PadR(B1_COD, TamSX3("B1_COD")[1]))
     cPrd := B1_COD
@@ -25,17 +24,17 @@ User Function CBRETEAN()
     // ARET[3] LOTE
     DbSelectArea("SB8")
     DbSetOrder(1)
-    DbSeek(FwXFilial("SB8") + PadR(cPrd, TamSX3("B8_LOTECTL")[1]))
+    DbSeek(FwXFilial("SB8") + cPrd + Substr(PARAMIXB[1], TamSX3("B1_COD")[1]+1,TamSX3("B8_LOTECTL")[1]))
     AAdd(aRet, SB8->B8_LOTECTL)
  
     // ARET[4] DATA DE VALIDADE
     AAdd(aRet, SB8->B8_DTVALID)
     DbCloseArea() // RESTAURA O ESTADO FECHADO DO ARQUIVO SB8
  
-    // ARET[5] NÚMERO DE SÉRIE
+    // ARET[5] Nï¿½MERO DE Sï¿½RIE
     AAdd(aRet, PadR("", TamSX3("BF_NUMSERI")[1]))
  
-    // ARET[6] ENDEREÇO DESTINO
+    // ARET[6] ENDEREï¿½O DESTINO
     AAdd(aRet, PadR("", TamSX3("BE_LOCALIZ")[1]))
 
 

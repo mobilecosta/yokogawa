@@ -155,7 +155,7 @@ Static Function YOACD01Pag(cOP)
 		Return
 	EndIF
 
-	_cLocEst := aCombo[nOpt]
+	_cLocEst := "02" //aCombo[nOpt]
 
 	If Select("SLDD") > 0
 		SLDD->(dbCloseArea())
@@ -265,7 +265,7 @@ Static Function YOACD01Pag(cOP)
 			If Empty(SD4->D4_PAGOP)
 				//Carregar apenas com Saldo
 				If _aSelec[_nCnt][11] > 0 .Or. _aSelec[_nCnt][06] > 0 .Or. !Empty(_aSelec[_nCnt][08])
-					// aAdd(_aEstru, {SD4->D4_COD,SD4->D4_LOCAL,"","",SD4->D4_LOTECTL,SD4->D4_NUMLOTE,SD4->D4_DTVALID,SD4->D4_QUANT,_cNumOP,"SD4",SD4->(Recno()),SD4->D4_TRT,SD4->D4_YFORNEC,SD4->D4_YLOJA,SD4->D4_YPEDBEN,SD4->D4_YPEDCOM,SD4->D4_YPEDITE,SD4->D4_NUMSC,SD4->D4_YFORNE2,SD4->D4_YLOJA2,SD4->D4_YPEDBE2,SD4->D4_YPEDCO2,SD4->D4_YPEDIT2})
+					 //aAdd(_aEstru, {SD4->D4_COD,SD4->D4_LOCAL,"","",SD4->D4_LOTECTL,SD4->D4_NUMLOTE,SD4->D4_DTVALID,SD4->D4_QUANT,_cNumOP,"SD4",SD4->(Recno()),SD4->D4_TRT,SD4->D4_YFORNEC,SD4->D4_YLOJA,SD4->D4_YPEDBEN,SD4->D4_YPEDCOM,SD4->D4_YPEDITE,SD4->D4_NUMSC,SD4->D4_YFORNE2,SD4->D4_YLOJA2,SD4->D4_YPEDBE2,SD4->D4_YPEDCO2,SD4->D4_YPEDIT2})
 					aAdd(_aLbxIt,_aSelec[_nCnt])
 				Endif
 			Endif
@@ -1094,6 +1094,7 @@ For _nCnt1 := 1 to Len(_aProds)
 	// Verifica o saldo no almoxarifado de estoque
 	If Alltrim(_aProds[_nCnt1][2]) <> _cLocEst
 		_aSaldo := SldPorLote(_aProds[_nCnt1][1],_cLocEst,_aProds[_nCnt1][6])
+		
 		If Len(_aSaldo) > 0
 			For _nCnt3 := 1 to Len(_aSaldo)
 				RecLock("SLDO",.T.)
@@ -1902,7 +1903,7 @@ If _nOpc == 4 //Alteracao Empenho
 	   SELECT ISNULL(MAX(D4_TRT),'###') D4_TRT, ISNULL(COUNT(1),0) AS QTDITENS
 		 FROM %Table:SD4% SD4
 	    WHERE D4_FILIAL = %xfilial:SD4% AND D4_OP = %Exp:_cD4OP% AND D4_COD = %Exp:_cD4Cod%
-		  AND D4_LOCAL = %Exp:_cD4Local% AND D4_LOTECTL = %Exp:cD4Lote% AND D4_TRT = %Exp:_cD4TRT% AND SD4.%NotDel%	
+		  AND D4_LOCAL = %Exp:_cD4Local% AND D4_LOTECTL = %Exp:_cD4Lote% AND D4_TRT = %Exp:_cD4TRT% AND SD4.%NotDel%	
    EndSQL
 
 	// Chave Unica do SD4 -> D4_FILIAL, D4_COD, D4_OP, D4_TRT, D4_LOTECTL, D4_NUMLOTE, D4_LOCAL, D4_ORDEM, D4_OPORIG, D4_SEQ, R_E_C_D_E_L_
@@ -1944,7 +1945,7 @@ If _nOpc == 4 //Alteracao Empenho
 	Aadd(_aVetor,{"D4_YPEDIT2",_aBenef[11] ,NIL})
 	Aadd(_aVetor,{"LINPOS","D4_COD+D4_TRT+D4_LOTECTL+D4_NUMLOTE+D4_LOCAL+D4_OPORIG+D4_SEQ",; 
                 _cD4Cod,;
-                _cD4TRT,;
+                Soma1(_cD4TRT),;
                 SD4->D4_LOTECTL,;
                 SD4->D4_NUMLOTE,;
                 _cD4Local,;
