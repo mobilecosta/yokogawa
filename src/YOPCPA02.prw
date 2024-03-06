@@ -173,18 +173,6 @@ Local aRet 		 := {}
 Local aParamBox  := {}
 Local aCombo 	 := {"02","03","04","08"}
 Local nI		 := 1
-Local _nCnt		 := 1
-Local _nCont2	 := 1
-Local _nCnt5	 := 1
-Local _nReq	 	 := 1
-Local _cOpOrig   := ''
-Local _cSeqSD4   := ''  
-Local _nPosReq   := 0
-Local _nPosChkEmp:= 0
-Local _aReqOps	 := {}
-Local _lPagOk    := .T.
-Local _nChkTran  := 0
-Local _aItAuxTrf := {}
 
 Private _aSelec  := {}
 Private _aCampos := {}
@@ -463,8 +451,47 @@ If Len(_aSelec) > 0
 	
 EndIf
 
-_aReqOps	:= {}
 If _lGrv
+	u_YOPA02G(cMV_PAR01, .F.)
+	
+	MsAguarde( {||YOPA02Trb()}, "Carregando Dados...")
+Else
+	MsgAlert("Processo cancelado ou não há itens para transferência!!!")
+EndIf
+
+
+If Select("SLDD") > 0
+	SLDD->(dbCloseArea())
+EndIf
+
+If Select("SLDO") > 0
+	SLDO->(dbCloseArea())
+EndIf
+
+RestArea(_aArea)
+//Apaga os arquivos
+Ferase(_cArqSLDD)
+Ferase(_cArqSLDO)
+
+CloseBrowse()
+
+Return
+
+User Function YOPA02G(cOp, lACD)
+
+Local _nCnt		 := 1
+Local _nCont2	 := 1
+Local _nCnt5	 := 1
+Local _nReq	 	 := 1
+Local _cOpOrig   := ''
+Local _cSeqSD4   := ''  
+Local _nPosReq   := 0
+Local _nPosChkEmp:= 0
+Local _aReqOps	 := {}
+Local _lPagOk    := .T.
+Local _nChkTran  := 0
+Local _aItAuxTrf := {}
+
 	_aItens    := {}
 	_aItAux    := {}
 	_aItAuxTrf := {}
@@ -476,11 +503,11 @@ If _lGrv
 		aItemLog := {}
 		DBSelectArea("SD4")
 		DBSetOrder(2)
-		If DBSeek(xFilial("SD4")+cMV_PAR01)
-			While !SD4->(Eof()) .AND. alltrim(SD4->D4_OP) == alltrim(cMV_PAR01)
+		If DBSeek(xFilial("SD4")+cOP)
+			While !SD4->(Eof()) .AND. alltrim(SD4->D4_OP) == alltrim(cOP)
 				aDadLog := {}
 				aadd(aDadLog,{"ZF_FILIAL",xFilial("SZF"),Nil})
-				aadd(aDadLog,{"ZF_OP",cMV_PAR01,Nil})
+				aadd(aDadLog,{"ZF_OP",cOP,Nil})
 				aadd(aDadLog,{"ZF_EMISSAO",dDataBase,Nil})
 				aadd(aDadLog,{"ZF_HORA",Time(),Nil})
 				aadd(aDadLog,{"ZF_USUARIO",Substr(cUsuario,7,15),Nil})
@@ -500,7 +527,7 @@ If _lGrv
 	Endif
 	
 	aItemLog := {}
-	aAdd(_aItens,{Substr(cMV_PAR01,1,8),dDataBase})
+	aAdd(_aItens,{Substr(cOP,1,8),dDataBase})
 	aItMata381 := {}
 	aCbMata381 := {}
 	For _nCont2 := 1 to Len(_aLbxIt)
@@ -558,7 +585,7 @@ If _lGrv
   			
 			// Atualiza Arquivos de Empenho
 			If Len(_aItAux) > 0
-				//aAdd(_aItens,{Substr(cMV_PAR01,1,8),dDataBase}) //Comentado para ajustar o EmpMod3
+				//aAdd(_aItens,{Substr(cOP,1,8),dDataBase}) //Comentado para ajustar o EmpMod3
 				For _nCnt5 := 1 to Len(_aItAux)
 					If Len(_aItAuxTrf) > 0
 						_nChkTran := aScan(_aItAuxTrf,{|x| x[1]+x[4]+x[5]+x[12] == _aItAux[_nCnt5][01]+_aItAux[_nCnt5][04]+_aItAux[_nCnt5][05]+_aItAux[_nCnt5][12] })
@@ -575,12 +602,12 @@ If _lGrv
 						//Gravação do Log Para Validação
 						aDadLog := {}
 						aadd(aDadLog,{"ZF_FILIAL",xFilial("SZF"),Nil})
-						aadd(aDadLog,{"ZF_OP",cMV_PAR01,Nil})
+						aadd(aDadLog,{"ZF_OP",cOP,Nil})
 						aadd(aDadLog,{"ZF_EMISSAO",dDataBase,Nil})
 						aadd(aDadLog,{"ZF_HORA",Time(),Nil})
 						aadd(aDadLog,{"ZF_USUARIO",Substr(cUsuario,7,15),Nil})
 						aadd(aDadLog,{"ZF_TIPO","T",Nil})
-						aadd(aDadLog,{"ZF_DOC",Substr(cMV_PAR01,1,8),Nil})
+						aadd(aDadLog,{"ZF_DOC",Substr(cOP,1,8),Nil})
 						aadd(aDadLog,{"ZF_COD",_aItAux[_nCnt5][01],Nil})		// 01 - Produto Origem
 						aadd(aDadLog,{"ZF_UM",_aItAux[_nCnt5][03],Nil})     	// 03 - UM Origem
 						aadd(aDadLog,{"ZF_QUANTOR",_aItAux[_nCnt5][16],Nil})	// 16 - Quantidade
@@ -694,56 +721,22 @@ If _lGrv
 		Endif
 		If Len(aItMata381) > 0 .And. lContinua
 			lMsErroAuto := .F.
-	    	aCbMata381 := {{"D4_OP",PadR(cMV_PAR01,TamSx3("D4_OP")[1]),NIL},;
+	    	aCbMata381 := {{"D4_OP",PadR(cOP,TamSx3("D4_OP")[1]),NIL},;
 	    		     	   {"INDEX",2,Nil}}
 			MSExecAuto({|x,y,z| mata381(x,y,z)},aCbMata381,aItMata381,4)
 			If lMsErroAuto
 				//Se ocorrer erro.
 				DisarmTransaction()
-	    		MostraErro()
+				If lACD
+					VTAlert("Erro na gravação do empenho [" + cOP + "] !", "Aviso", .T., 2000)
+				Else
+					MostraErro()
+				EndIf
 			EndIf	
 		Endif
 		End Transaction
 	EndIf
 	//Fim da inclusao do ajsute de EmpMod2
-
-	//aAdd(_aEstru, {SD4->D4_COD,SD4->D4_LOCAL,""             ,""             ,SD4->D4_LOTECTL,SD4->D4_NUMLOTE,SD4->D4_DTVALID,SD4->D4_QUANT,_cNumOP,"SD4",SD4->(Recno())})
-	//Abaixo Comentado para ajuste do EmpMod2
-	/* Inicio do comentario para ajuste do EmpMod2
-	For _nReq := 1 To Len(_aReqOps)
-		_cCodPro := _aReqOps[_nReq,01]
-		_cTRT	 := _aReqOps[_nReq,02]
-		_nQtdPro := _aReqOps[_nReq,03]
-		_nPosReq := aScan(_aEstru,{|x| Alltrim(x[1])+Alltrim(x[12]) == Alltrim(_cCodPro)+Alltrim(_cTRT) })
-		_nRegSD4 := _aEstru[_nPosReq,11]
-		DbSelectArea("SD4")
-		DbGoTo(_nRegSD4)
-		_cNumOp	 := SD4->D4_OP
-		_cCodPro := SD4->D4_COD
-		//acrescentado a variavel para receber a quantidade original do empenho
-		_nD4QtdOri:= SD4->D4_QTDEORI
-		_nSalEmp := SD4->D4_QUANT
-		_cLocEmp := SD4->D4_LOCAL
-		_nQtdTran:= _nQtdPro
-		_nQtEmpNew := _nSalEmp - _nQtdTran
-		// Exclui a Qtde do empenho Anterior ( Original )
-		_aBenef := {SD4->D4_YFORNEC,SD4->D4_YLOJA,SD4->D4_YPEDBEN,SD4->D4_YPEDCOM,SD4->D4_YPEDITE,SD4->D4_NUMSC,SD4->D4_YFORNE2,SD4->D4_YLOJA2,SD4->D4_YPEDBE2,SD4->D4_YPEDCO2,SD4->D4_YPEDIT2}
-		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
-		//³ Alterado para validar se a quantidade original é diferente do saldo do ³
-		//³	empenho. Caso   for diferente habilita a variável para zerar o empenho ³
-		//³	Ivandro Santos - 19/06/12 - Chamado 29610                              ³
-		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
-		If _nD4QtdOri > _nSalEmp
-			_lEmpenho := YOPA02Emp(4,_cCodPro,_cNumOP,_cTrt,_cLocEmp,_nD4QtdOri,_nSalEmp,dDataBase,,,"E",_aBenef,_nRegSD4 )
-		Else 
-			_lEmpenho := YOPA02Emp(5,_cCodPro,_cNumOP,_cTrt,_cLocEmp,_nSalEmp,_nSalEmp,dDataBase,,,"E",_aBenef,_nRegSD4 )
-		Endif
-		If _nQtEmpNew > 0 .AND. _lEmpenho
-			// Inclui novo saldo do Empenho
-			YOPA02Emp(3,_cCodPro,_cNumOP,_cTrt,_cLocEmp,_nQtEmpNew,_nQtEmpNew,dDataBase,,,"",_aBenef,0 )
-		Endif
-	Next _nReq
-	*/ //Fim Do comentario do Ajuste de EmpMod2
 
 	//Guardando o Log do SD4 Depois da Alteração dos Empenhos
 	if SuperGetMV("MV_YOLOGOP",,.T.)
@@ -751,11 +744,11 @@ If _lGrv
 		aItemLog := {}
 		DBSelectArea("SD4")
 		DBSetOrder(2)
-		if DBSeek(xFilial("SD4")+cMV_PAR01)
-			While !SD4->(Eof()) .AND. alltrim(SD4->D4_OP) == alltrim(cMV_PAR01)
+		if DBSeek(xFilial("SD4")+cOP)
+			While !SD4->(Eof()) .AND. alltrim(SD4->D4_OP) == alltrim(cOP)
 				aDadLog := {}
 				aadd(aDadLog,{"ZF_FILIAL",xFilial("SZF"),Nil})
-				aadd(aDadLog,{"ZF_OP",cMV_PAR01,Nil})
+				aadd(aDadLog,{"ZF_OP",cOP,Nil})
 				aadd(aDadLog,{"ZF_EMISSAO",dDataBase,Nil})
 				aadd(aDadLog,{"ZF_HORA",Time(),Nil})
 				aadd(aDadLog,{"ZF_USUARIO",Substr(cUsuario,7,15),Nil})
@@ -773,34 +766,8 @@ If _lGrv
 			u_YOLOGOP1(aItemLog,.T.,"")
 		endif
 	endif
-	
-	MsAguarde( {||YOPA02Trb()}, "Carregando Dados...")
-	
-Else
-	
-	MsgAlert("Processo cancelado ou não há itens para transferência!!!")
-	
-EndIf
-
-
-If Select("SLDD") > 0
-	SLDD->(dbCloseArea())
-EndIf
-
-If Select("SLDO") > 0
-	SLDO->(dbCloseArea())
-EndIf
-
-RestArea(_aArea)
-//Apaga os arquivos
-Ferase(_cArqSLDD)
-Ferase(_cArqSLDO)
-
-CloseBrowse()
 
 Return
-
-
 
 /*/
 +---------------------------------------------------------------------------+
@@ -2439,6 +2406,10 @@ Return
 +---------------------------------------------------------------------------+
 /*/
 
+User Function YOEmpMd2(_nOpc,_cD4Cod,_cD4OP,_cD4TRT,_cD4Local,_nD4QtdOri,_nD4Quant,_dD4DtEmp,_cD4Lote,_cD4SubLote,_cD4PagOp,_aBenef,_nRegSD4,_cOpOrig,_cSeqSD4)
+
+Return YOEmpMod2(_nOpc,_cD4Cod,_cD4OP,_cD4TRT,_cD4Local,_nD4QtdOri,_nD4Quant,_dD4DtEmp,_cD4Lote,_cD4SubLote,_cD4PagOp,_aBenef,_nRegSD4,_cOpOrig,_cSeqSD4)
+
 Static Function YOEmpMod2(_nOpc,_cD4Cod,_cD4OP,_cD4TRT,_cD4Local,_nD4QtdOri,_nD4Quant,_dD4DtEmp,_cD4Lote,_cD4SubLote,_cD4PagOp,_aBenef,_nRegSD4,_cOpOrig,_cSeqSD4)
 
 Local _aArea	:= GetArea()
@@ -2575,6 +2546,7 @@ If _nOpc == 4 //Alteracao Empenho
 	Aadd(_aVetor,{"D4_YPEDBE2",_aBenef[9]  ,NIL})
 	Aadd(_aVetor,{"D4_YPEDCO2",_aBenef[10] ,NIL})
 	Aadd(_aVetor,{"D4_YPEDIT2",_aBenef[11] ,NIL})
+
 	Aadd(_aVetor,{"LINPOS","D4_COD+D4_TRT+D4_LOTECTL+D4_NUMLOTE+D4_LOCAL+D4_OPORIG+D4_SEQ",; 
                 _cD4Cod,;
                 _cD4TRT,;
