@@ -23,25 +23,28 @@ Local cPathSpool := "\system\spool\"
 //dbSelectArea("SF2")
 //dbSelectArea("SC6")
 
-// CABECALHO DA ETIQUETA
-MSCBINFOETI("Etiqueta Volume","Volume [" + CB6->CB6_VOLUME + "/" + AllTrim(nVolume) + "/" + AllTrim(nVolumes) + "]")
+// //INICIALIZAÇÃO DA IMPRESSAO
 MSCBPRINTER(_cZModel, _cZPorta,,,,,,,, cFila,,cPathSpool)
+MSCBINFOETI("Etiqueta Volume","Volume [" + CB6->CB6_VOLUME + "/" + AllTrim(nVolume) + "/" + AllTrim(nVolumes) + "]")
 MSCBCHKStatus(.F.)
-MSCBBEGIN(1,2)
-MSCBSAY( 03, 01, AllTrim(SM0->M0_NOMECOM),"N","D","1,2")
-MSCBSAY( 03, 02, AllTrim(SM0->M0_FULNAME),"N","D","1,2")
-MSCBSAY( 03, 03, AllTrim(SM0->M0_ENDENT),"N","D","1,2")
-MSCBSAY( 03, 04, Trans(SM0->M0_CGC, "@R 99.999.999/9999-99"),"N","D","1,2")
+MSCBBEGIN(1,6,20) //Qtde de copias, velocidade (1 a 6) e tamanho da etiqueta em mm
+MSCBBox(02, 03, 98, 78, 3)
+// CABECALHO DA ETIQUETA
+MSCBSAY( 005, 006, AllTrim(SM0->M0_NOMECOM),"N","0","029,036")
+MSCBSAY( 026, 006, AllTrim(SM0->M0_FULNAME),"N","0","043,053", .F.)
+MSCBSAY( 005, 013, AllTrim(SM0->M0_ENDENT),"N","0","024,034")
+MSCBSAY( 023, 017, Trans(SM0->M0_CGC, "@R 99.999.999/9999-99"),"N","0","024,034")
+MSCBLineH(02, 21, 98, 3)
 
 //DADOS DA NF/PEDIDO
-MSCBSAY( 03, 01, AllTrim(SC5->C5_NUM),"N","D","1,2")     // Numero do Pedido de Vendas
-MSCBSAY( 03, 02, AllTrim(SC5->C5_DTREAL),"N","D","1,2") // Nome do CLiente
+MSCBSAY( 005, 022, AllTrim(SC5->C5_NUM),"N","D","1,2")     // Numero do Pedido de Vendas
+MSCBSAY( 005, 026, AllTrim(SC5->C5_DTREAL),"N","D","1,2") // Nome do CLiente
 
 //NO INTERIOR DA ETIQUETA
-MSCBSAY( 03, 03, AllTrim(SC5->C5_CLIENTE),"N","D","1,2")
-MSCBSAY( 03, 04, AllTrim(SC5->C5_PEDCLI),"N","D","1,2")
-MSCBSAY( 03, 05, AllTrim(SD2->D2_COD),"N","D","1,2")
-MSCBSAY( 03, 06, AllTrim(SD2->D2_QUANT),"N","D","1,2")
+MSCBSAY( 005, 069, AllTrim(SC5->C5_CLIENTE),"N","0","024,034")
+MSCBSAY( 005, 069, AllTrim(SC5->C5_PEDCLI),"N","0","024,034")
+MSCBSAY( 037, 073, AllTrim(SD2->D2_COD),"N","0","043,053")
+MSCBSAY( 005, 073, AllTrim(SD2->D2_QUANT),"N","0","024,034")
 
 //NO RODAPE DA ETIQUETA
 /*Cidade de entrega da Nota Fiscal
