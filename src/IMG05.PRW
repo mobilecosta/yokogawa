@@ -19,12 +19,16 @@ Local _cZModel := Alltrim(GetNewPar("YO_MODIMPE","ZDesigner GC420T")) // paramet
 Local _cZPorta := "COM1" //"LPT1"
 Local cFila := "01"
 Local cPathSpool := "\system\spool\"
-Local cNome := ''
+Local cNome   := ''
+Local cCidade := ''
+Local cUF     := ''
+Local cPedido := ""
+
 
 nQtdCopias := 1
 nVolIniPvt := 1
 nVolFimPvt := 1
-//dbSelectArea("SF2")
+dbSelectArea("SF2")
 //dbSelectArea("SC6")
 
 // //INICIALIZAÇÃO DA IMPRESSAO
@@ -35,33 +39,55 @@ MSCBBEGIN(1,6,200) //Qtde de copias, velocidade (1 a 6) e tamanho da etiqueta em
 //MSCBBox(02, 03, 98, 98/*78*/, 3)
 
 // CABECALHO DA ETIQUETA
-MSCBSAY( 005, 006, AllTrim(SM0->M0_NOMECOM),"R","0","029,036")
-MSCBSAY( 005, 011, AllTrim(SM0->M0_ENDENT),"R","0","024,034")
-MSCBSAY( 005, 016, Trans(SM0->M0_CGC, "@R 99.999.999/9999-99"),"R","0","024,034")
-//MSCBLineH(02, 020, 98, 3)
+
+MSCBSAY( 118, 005, AllTrim("YOKOGAWA"),"R","0","072,068")
+MSCBLineV(120, 000, 080, 3)
+//MSCBLineV(30, 01, 13, 3)
+MSCBSAY( 115, 005, "YOKOGAWA America do Sul Ltda","R","0","024,034")
+MSCBSAY( 126, 085, AllTrim(SM0->M0_ENDENT),"R","0","024,034")
+MSCBSAY( 122, 085, Trans(SM0->M0_CGC, "@R 99.999.999/9999-99"),"R","0","024,034")
+MSCBBox(116, 160, 210, 220, 3)
+//MSCBBox(120, 118, 220, 150, 3)
+
+MSCBSay(120, 162, "NF: " + CB7->CB7_NOTA, "R", "0", "024, 034")
+//MSCBLineH(118, 005, 220, 3)
 
 //DADOS DA NF/PEDIDO
-MSCBSAY( 005, 022, "Pedido n.: " + AllTrim(SC5->C5_NUM)   ,"R","0","024,034")     // Numero do Pedido de Vendas
-MSCBSAY( 005, 028, "Data     : " + AllTrim(SC5->C5_DTREAL),"R","0","024,034") // Nome do CLiente
-cNome := POSICIONE('SA1',1,xFilial('SA1')+SC5->C5_CLIENTE,'A1_NOME')    
+cPedido := POSICIONE('SF2',1,xFilial('SF2')+CB7->CB7_PEDIDO,'F2_EMISSAO') 
+MSCBSAY( 110, 140, "Pedido n.: " + AllTrim(CB7->CB7_PEDIDO)   ,"R","0","024,034")     // Numero do Pedido de Vendas
+MSCBSAY( 110, 190, "Data : " + AllTrim(SF2->F2_EMISSAO),"R","0","024,034") // Nome do CLiente
+
+MSCBLineV(108, 000, 290, 3)
 
 //NO INTERIOR DA ETIQUETA
-MSCBSAY( 005, 034, "Cod Cliente: " + AllTrim(cNome)   ,"R","0","024,034")
-MSCBSAY( 005, 040, "Pedido Cli : " + AllTrim(SC5->C5_PEDCLI)    ,"R","0","024,034")
-MSCBSAY( 005, 046, "Produto    : " + AllTrim(SD2->D2_COD)       ,"R","0","024,034")
-MSCBSAY( 005, 052, "Quantidade : " + AllTrim(str(SD2->D2_QUANT)),"R","0","024,034")
+cNome := POSICIONE('SA1',1,xFilial('SA1')+CB7->CB7_CLIENT,'A1_NOME')    
+MSCBSAY( 090, 005, "Cliente: "      ,"R","0","024,034")
+MSCBSAY( 090, 025, cNome            ,"R","0","034,044")
+MSCBSAY( 080, 140, "Pedido : "      ,"R","0","024,034")
+MSCBSAY( 080, 165, SC5->C5_PEDCLI   ,"R","0","034,044")
+MSCBSAY( 070, 005, "Códigos: " + AllTrim(CB9->CB9_PROD)       ,"R","0","024,034")
+MSCBSAY( 060, 005, "Quantidade : " + AllTrim(str(CB9->CB9_QTESEP)),"R","0","024,034")
 
 //NO RODAPE DA ETIQUETA
 //Dados da NF
 //MSCBBox(02, 65, 98, 78, 3)
-MSCBSay(005, 060, "Cidade Entr: " + SC5->C5_YLOCEMB, "R", "0", "024, 034")
-MSCBSay(005, 066, "UF Entrega : " + SC5->C5_YUFEMB,  "R", "0", "024, 034")
-MSCBSay(005, 072, "Nota Fiscal: " + SC5->C5_NOTA,    "R", "0", "024, 034")
+cCidade := POSICIONE('SA1',1,xFilial('SA1')+SC5->C5_CLIENT,'A1_MUN')    
+cUF     := POSICIONE('SA1',1,xFilial('SA1')+SC5->C5_CLIENT,'A1_EST')    
+MSCBSay(030, 005, "Cidade Entr: ", "R", "0", "024, 034")
+MSCBSay(030, 040, cCidade, "R", "0", "034, 044")
+MSCBSay(030, 140, "UF Entrega : ",  "R", "0", "024, 034")
+MSCBSay(030, 175, cUF,  "R", "0", "034, 044")
+MSCBSay(030, 200, IIF(SC5->C5_TPFRETE=="F", "FOB", "CIF"),  "R", "0", "034, 044")
 
 //MSCBLineH(02, 76, 98, 3)
-MSCBSay(005, 078, "Pedido n.: " + Alltrim(SC5->C5_NUM) , "R", "0", "024, 034")
 //MSCBSay(037, 088, cValToChar(SC5->C5_VOLUME1) + " " + Upper(Alltrim(SC5->C5_ESPECI1)), "N", "0", "024, 034")
-MSCBSay(005, 084, "Volume: " + cValToChar(nVolIniPvt) + "/" + cValToChar(nVolFimPvt),  "R", "0", "024, 034")
+MSCBSay(010, 005, "Volume: ",  "R", "0", "024, 034")
+MSCBSay(010, 025, cValToChar(nVolIniPvt) + "/" + cValToChar(nVolFimPvt),  "R", "0", "034, 044")
+MSCBSay(010, 160, "Peso: ",  "R", "0", "024, 034")
+MSCBSay(010, 180, str(SF2->F2_PBRUTO),  "R", "0", "034, 044")
+
+MSCBSAY( 005, 180,"Volume [" + CB6->CB6_VOLUME + "/" + AllTrim(nVolume) + "/" + AllTrim(nVolumes) + "]","R","0","014,024")
+//MSCBSAY( 125, 200,"Volume [" + CB6->CB6_VOLUME + "/" + AllTrim(nVolume) + "/" + AllTrim(nVolumes) + "]","R","0","014,024")
 //MSCBLineH(02, 99, 98, 3)
 //20 comprimento x 10 altura.
 
