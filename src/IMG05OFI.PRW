@@ -5,14 +5,14 @@
 +---------------------------------------------------------------------------+
 | Programa  | IMG05     | Autor | Antonio Nunes           | Data | 05/03/24 |
 +-----------+---------------------------------------------------------------+
-| Descrição | Rotina para impressão da etiqueta - Rotina ACDV166            |
+| Descrição | Rotina para impressão da etiqueta - Rotina ACDV173            |
               CB5SetImp(cImp,.t.) .and. ExistBlock("IMG05")                 |
 +-----------+---------------------------------------------------------------+
 | Uso       | Yokogawa                                                      |
 +---------------------------------------------------------------------------+
 /*/ 
 
-User Function IMG05() 
+User Function IMG05OFI() 
 Local nVolumes := PARAMIXB[1]
 Local nVolume  := PARAMIXB[2]
 Local _cZModel := Alltrim(GetNewPar("YO_MODIMPE","ZDesigner GC420T")) // parametro utilizado para definir a impressora termica. "OS 214"//

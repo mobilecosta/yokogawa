@@ -7,7 +7,7 @@
 			"name": "Protheus",
 			"program": "${command:AskForProgramName}",
 			"cwb": "${workspaceFolder}",
-			"smartclientBin": "C://Protheus//v2210//Protheus//bin//smartclient//smartclient.exe",
+			"smartclientBin": "C:/TOTVS12/Protheus2310/Protheus/bin/smartclient/smartclient.exe",
 			"isMultiSession": true,
 			"enableTableSync": true
 		}
